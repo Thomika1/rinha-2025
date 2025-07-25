@@ -18,7 +18,7 @@ services:
           memory: "20MB"
 
   api1: &api
-    image: thomazmbonfim/rinha-2025:tag
+    image: thomazmbonfim/rinha-de-backend-2025:latest
     hostname: api1
     environment:
       - APP_PORT=8080
@@ -30,12 +30,12 @@ services:
       - payment-processor
     depends_on:
       redis:
-        condition: service_health
+        condition: service_healthy
     deploy:
       resources:
         limits:
-          cpus:"0.5"
-          memory:"30MB"
+          cpus: "0.5"
+          memory: "30MB"
   api2: 
     <<: *api
     hostname: api2
@@ -48,7 +48,7 @@ services:
   redis:
     image: redis:7.2-alpine 
     container_name: redis-rinha
-    command: # DEFINIR POSTERIORMENTE COMMAND
+    command: redis-server --save "" --appendonly no --maxclients 20000
     networks:
       - backend
     healthcheck:
@@ -61,8 +61,9 @@ services:
         limits:
           cpus: "0.25"
           memory: "250MB"
-  networks:
+networks:
     backend:
       driver: bridge
     payment-processor: 
+      name: payment-processor
       external: true

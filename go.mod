@@ -2,7 +2,10 @@ module github.com/Thomika1/rinha-2025.git
 
 go 1.23.6
 
-require github.com/gofiber/fiber/v2 v2.52.9
+require (
+	github.com/gofiber/fiber/v2 v2.52.9
+	github.com/shopspring/decimal v1.4.0
+)
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect

@@ -17,4 +17,5 @@ func Payments(ctx *fiber.Ctx) error {
 	// enfileirar o payment na fila do redis
 
 	// retornar status ok
+	return nil
 }

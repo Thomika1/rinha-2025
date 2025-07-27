@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Thomika1/rinha-2025.git/handler"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -10,10 +11,7 @@ func main() {
 
 	app := fiber.New()
 
-	app.Get("/helloworld", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
+	handler.InitRoutes(app)
 
 	log.Fatal(app.Listen(":8080"))
-
 }

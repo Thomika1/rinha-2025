@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/Thomika1/rinha-2025.git/db"
-	"github.com/Thomika1/rinha-2025.git/handler"
+	"github.com/Thomika1/rinha-2025.git/router"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -14,7 +14,7 @@ func main() {
 
 	db.InitRedis()
 
-	handler.InitRoutes(app)
+	router.InitRoutes(app)
 
 	log.Fatal(app.Listen(":8080"))
 }

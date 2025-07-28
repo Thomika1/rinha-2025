@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/handler"
 	"github.com/gofiber/fiber/v2"
 )
@@ -10,6 +11,8 @@ import (
 func main() {
 
 	app := fiber.New()
+
+	db.InitRedis()
 
 	handler.InitRoutes(app)
 

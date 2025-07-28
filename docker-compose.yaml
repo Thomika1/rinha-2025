@@ -21,7 +21,6 @@ services:
     image: thomazmbonfim/rinha-de-backend-2025:latest
     hostname: api1
     environment:
-      - APP_PORT=8080
       - REDIS_URL=6379
       - PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
       - PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080
@@ -40,7 +39,6 @@ services:
     <<: *api
     hostname: api2
     environment:
-      - APP_PORT=8080
       - REDIS_URL=6379
       - PROCESSOR_DEFAULT_URL=http://payment-processor-default:8080
       - PROCESSOR_FALLBACK_URL=http://payment-processor-fallback:8080

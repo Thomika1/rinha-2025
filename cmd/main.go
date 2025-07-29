@@ -15,9 +15,12 @@ func main() {
 
 	db.InitRedis()
 
-	router.InitRoutes(app)
-
 	go worker.InitWorkers()
+
+	go worker.StartHealthCheckerWithRedis(db.RedisCtx, db.Client, "http://payment-processor-default:8080/payments/service-health", "health:processor:default")
+	go worker.StartHealthCheckerWithRedis(db.RedisCtx, db.Client, "http://payment-processor-fallback:8080/payments/service-health", "health:processor:fallback")
+
+	router.InitRoutes(app)
 
 	log.Fatal(app.Listen(":8080"))
 }

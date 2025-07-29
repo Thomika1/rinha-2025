@@ -18,3 +18,15 @@ type PaymentsSummaryResponse struct {
 	Default  PaymentsSummary `json:"DefaultSummary"`
 	Fallback PaymentsSummary `json:"FallbackSummary"`
 }
+
+type ServiceHealth struct {
+	Failing         bool `json:"failing"`
+	MinResponseTime int  `json:"minResponseTime"`
+}
+
+type ProcessedPayment struct {
+	CorrelationID string          `json:"correlationId"`
+	Amount        decimal.Decimal `json:"amount"`
+	UrlProcessor  string          `json:"processor"`
+	CreatedAt     string          `json:"createdAt"`
+}

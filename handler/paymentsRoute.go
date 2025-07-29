@@ -15,24 +15,24 @@ func Payments(ctx *fiber.Ctx) error {
 
 	if err := ctx.BodyParser(payment); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse JSON",
+			"error": "could not parse JSON",
 		})
 	}
 	// enfileirar o payment na fila do redis
 
 	paymentJSON, err := json.Marshal(payment)
 	if err != nil {
-		log.Printf("Erro ao serializar pagamento para JSON: %v", err)
+		log.Printf("Error serializing payment to JSON: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 
 	err = db.Client.LPush(db.RedisCtx, "payment_jobs", paymentJSON).Err()
 	if err != nil {
-		log.Printf("Erro ao enfileirar pagamento no Redis: %v", err)
+		log.Printf("Error queuing payment: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not queue payment"})
 	}
 
-	log.Printf("Pagamento %s enfileirado com sucesso!", payment.CorrelationId)
+	log.Printf("Payment %s succssefuly queued!", payment.CorrelationId)
 
 	// retornar status ok
 	return ctx.Status(fiber.StatusAccepted).SendString("Payment queued")

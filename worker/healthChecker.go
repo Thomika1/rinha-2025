@@ -58,11 +58,8 @@ func StartHealthCheckerWithRedis(ctx context.Context, redisClient *redis.Client,
 func getHealthFromRedis(ctx context.Context, redisClient *redis.Client, key string) (model.ServiceHealth, error) {
 	var status model.ServiceHealth
 
-	// Pega o JSON do Redis
 	statusJSON, err := redisClient.Get(ctx, key).Result()
 	if err == redis.Nil {
-		// Chave não existe ainda, talvez o 1º health check não rodou.
-		// Assumimos como falha para segurança.
 		return model.ServiceHealth{Failing: true}, nil
 	} else if err != nil {
 		return model.ServiceHealth{}, err // Erro de conexão com o Redis

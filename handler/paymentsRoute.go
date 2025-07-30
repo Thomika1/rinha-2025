@@ -2,11 +2,11 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"strconv"
 
 	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
+	"github.com/Thomika1/rinha-2025.git/worker"
 	"github.com/gofiber/fiber/v2"
 	"github.com/shopspring/decimal"
 )
@@ -24,17 +24,19 @@ func Payments(ctx *fiber.Ctx) error {
 
 	paymentJSON, err := json.Marshal(payment)
 	if err != nil {
-		log.Printf("Error serializing payment to JSON: %v", err)
+		//log.Printf("Error serializing payment to JSON: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})
 	}
 
 	err = db.Client.LPush(db.RedisCtx, "payment_jobs", paymentJSON).Err()
 	if err != nil {
-		log.Printf("Error queuing payment: %v", err)
+		//log.Printf("Error queuing payment: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "could not queue payment"})
 	}
 
-	log.Printf("Payment %s succssefuly queued!", payment.CorrelationId)
+	worker.UpdateSummaryCounters(*payment, "default")
+
+	//log.Printf("\nPayment %s succssefuly queued!", payment.CorrelationId)
 
 	// retornar status ok
 	return ctx.Status(fiber.StatusAccepted).SendString("Payment queued")
@@ -53,7 +55,7 @@ func PaymentsSummary(ctx *fiber.Ctx) error {
 
 	results, err := db.Client.MGet(db.RedisCtx, keys...).Result()
 	if err != nil {
-		log.Printf("failed to retrieve summary from redis: %v", err)
+		//log.Printf("failed to retrieve summary from redis: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "failed to retrieve summary from redis",
 		})

@@ -17,32 +17,27 @@ func StartHealthCheckerWithRedis(ctx context.Context, redisClient *redis.Client,
 		var newStatus model.ServiceHealth
 
 		if err != nil {
-			log.Printf("Error checking health state %s: %v", url, err)
+			//log.Printf("Error checking health state %s: %v", url, err)
 			newStatus.Failing = true
 		} else {
 			defer resp.Body.Close()
 			if err := json.NewDecoder(resp.Body).Decode(&newStatus); err != nil {
-				log.Printf("Error decoding health state from %s: %v", url, err)
+				//log.Printf("Error decoding health state from %s: %v", url, err)
 				newStatus.Failing = true
 			}
 		}
 
-		// --- LÓGICA DO REDIS ---
-		// 1. Serializa o status para JSON
 		statusJSON, err := json.Marshal(newStatus)
 		if err != nil {
 			log.Printf("Error serializing health state to json: %v", err)
 			return
 		}
 
-		// 2. Salva o JSON como uma string no Redis. Usamos SET (sobrescreve o valor anterior).
-		// Não definimos expiração (0), pois o worker atualiza o valor a cada 5s.
 		if err := redisClient.Set(ctx, redisKey, statusJSON, 0).Err(); err != nil {
 			log.Printf("Error seting health sate on redis %s: %v", redisKey, err)
 		}
-		// ----------------------
 
-		log.Printf("Health state for %s was updated", redisKey)
+		//log.Printf("Health state for %s was updated", redisKey)
 	}
 
 	check() // Verificação imediata

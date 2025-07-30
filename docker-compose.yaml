@@ -15,7 +15,7 @@ services:
       resources:
         limits:
           cpus: "0.2"
-          memory: "20MB"
+          memory: "50MB"
 
   api1: &api
     image: thomazmbonfim/rinha-de-backend-2025:latest
@@ -34,7 +34,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: "30MB"
+          memory: "100MB"
   api2: 
     <<: *api
     hostname: api2
@@ -57,8 +57,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.25"
-          memory: "250MB"
+          cpus: "0.3"
+          memory: "100MB"
 networks:
     backend:
       driver: bridge

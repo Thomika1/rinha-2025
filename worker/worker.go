@@ -1,11 +1,12 @@
 package worker
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
@@ -16,7 +17,7 @@ func InitWorkers() {
 	processorURLFallback := os.Getenv("PROCESSOR_FALLBACK_URL")
 	processorURLDefault := os.Getenv("PROCESSOR_DEFAULT_URL")
 
-	conc := 10
+	conc := 20
 
 	for i := 0; i < conc; i++ {
 		fmt.Printf("\nworker %d initialized", i)
@@ -32,11 +33,11 @@ func InitWorkers() {
 				log.Printf("New task received: %s", taskData)
 
 				var payment model.Payments
-				if err := json.Unmarshal([]byte(taskData), &payment); err != nil {
+				if err := sonic.Unmarshal([]byte(taskData), &payment); err != nil {
 					log.Printf("Error deserializing task: %v", err)
 					continue
 				}
-				paymentJSON, err := json.Marshal(payment)
+				paymentJSON, err := sonic.Marshal(payment)
 				if err != nil {
 					log.Printf("Error serializing payment")
 					continue
@@ -46,6 +47,15 @@ func InitWorkers() {
 				defaultStatus, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
 				if err != nil {
 					//log.Printf("Error getting Default health state from redis Redis: %v. Treating as a failure.", err)
+					defaultStatus.Failing = true
+				}
+				fallbackStatus, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
+				if err != nil {
+					//log.Printf("Error getting Fallback health state from redis Redis: %v. Treating as a failure.", err)
+					fallbackStatus.Failing = true
+				}
+
+				if defaultStatus.MinResponseTime > fallbackStatus.MinResponseTime+150 {
 					defaultStatus.Failing = true
 				}
 				///////////////////////
@@ -60,12 +70,6 @@ func InitWorkers() {
 					}
 					//updateSummaryCounters(payment, "default")
 					continue
-				}
-
-				fallbackStatus, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
-				if err != nil {
-					//log.Printf("Error getting Fallback health state from redis Redis: %v. Treating as a failure.", err)
-					fallbackStatus.Failing = true
 				}
 
 				if !fallbackStatus.Failing {

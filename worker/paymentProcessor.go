@@ -2,10 +2,11 @@ package worker
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
@@ -13,7 +14,7 @@ import (
 
 func PaymentProcessor(payment model.Payments, url string) error {
 
-	paymentJSON, err := json.Marshal(payment)
+	paymentJSON, err := sonic.Marshal(payment)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payment data: %w", err)
 	}
@@ -37,7 +38,7 @@ func PaymentProcessor(payment model.Payments, url string) error {
 		CreatedAt:     requestedAt,
 	}
 
-	paymentData, err := json.Marshal(processedPayment)
+	paymentData, err := sonic.Marshal(processedPayment)
 	if err != nil {
 		return fmt.Errorf("failed to marshal payment data: %w", err)
 	}

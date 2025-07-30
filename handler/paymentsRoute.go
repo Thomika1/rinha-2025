@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"encoding/json"
 	"strconv"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
@@ -22,7 +23,7 @@ func Payments(ctx *fiber.Ctx) error {
 	}
 	// enfileirar o payment na fila do redis
 
-	paymentJSON, err := json.Marshal(payment)
+	paymentJSON, err := sonic.Marshal(payment)
 	if err != nil {
 		//log.Printf("Error serializing payment to JSON: %v", err)
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal server error"})

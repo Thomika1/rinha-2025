@@ -2,10 +2,12 @@ package worker
 
 import (
 	"context"
-	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/bytedance/sonic"
 
 	"github.com/Thomika1/rinha-2025.git/model"
 	"github.com/redis/go-redis/v9"
@@ -17,17 +19,23 @@ func StartHealthCheckerWithRedis(ctx context.Context, redisClient *redis.Client,
 		var newStatus model.ServiceHealth
 
 		if err != nil {
-			//log.Printf("Error checking health state %s: %v", url, err)
 			newStatus.Failing = true
 		} else {
 			defer resp.Body.Close()
-			if err := json.NewDecoder(resp.Body).Decode(&newStatus); err != nil {
-				//log.Printf("Error decoding health state from %s: %v", url, err)
+
+			// 1. Lê todo o corpo da resposta para um slice de bytes.
+			body, err := io.ReadAll(resp.Body)
+			if err != nil {
 				newStatus.Failing = true
+			} else {
+				// 2. Usa sonic.Unmarshal para decodificar o slice de bytes.
+				if err := sonic.Unmarshal(body, &newStatus); err != nil {
+					newStatus.Failing = true
+				}
 			}
 		}
 
-		statusJSON, err := json.Marshal(newStatus)
+		statusJSON, err := sonic.Marshal(newStatus)
 		if err != nil {
 			log.Printf("Error serializing health state to json: %v", err)
 			return
@@ -61,7 +69,7 @@ func getHealthFromRedis(ctx context.Context, redisClient *redis.Client, key stri
 	}
 
 	// Desserializa o JSON para o struct
-	if err := json.Unmarshal([]byte(statusJSON), &status); err != nil {
+	if err := sonic.Unmarshal([]byte(statusJSON), &status); err != nil {
 		return model.ServiceHealth{}, err
 	}
 

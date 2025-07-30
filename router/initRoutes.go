@@ -6,9 +6,6 @@ import (
 )
 
 func InitRoutes(app *fiber.App) {
-	app.Get("/helloworld", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World!")
-	})
-
 	app.Post("/payments", handler.Payments)
+	app.Get("/payments-summary", handler.PaymentsSummary)
 }

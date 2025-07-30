@@ -10,13 +10,13 @@ type Payments struct {
 }
 
 type PaymentsSummary struct {
-	TotalRequests int             `json:"totalRequests"`
+	TotalRequests int64           `json:"totalRequests"`
 	TotalAmount   decimal.Decimal `json:"totalAmount"`
 }
 
 type PaymentsSummaryResponse struct {
-	Default  PaymentsSummary `json:"DefaultSummary"`
-	Fallback PaymentsSummary `json:"FallbackSummary"`
+	Default  PaymentsSummary `json:"default"`
+	Fallback PaymentsSummary `json:"fallback"`
 }
 
 type ServiceHealth struct {

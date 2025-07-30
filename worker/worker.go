@@ -2,6 +2,7 @@ package worker
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -32,7 +33,7 @@ func InitWorkers() {
 			log.Printf("Error deserializing task: %v", err)
 			continue
 		}
-
+		paymentJSON, err := json.Marshal(payment)
 		defaultStatus, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
 		if err != nil {
 			log.Printf("Error getting Default health state from redis Redis: %v. Treating as a failure.", err)
@@ -45,7 +46,10 @@ func InitWorkers() {
 			err := PaymentProcessor(payment, processorURLDefault)
 			if err != nil {
 				log.Printf("Error processing payment %s", err)
+				db.Client.LPush(db.RedisCtx, "payment_jobs", paymentJSON)
+				continue
 			}
+			updateSummaryCounters(payment, "default")
 			continue
 		}
 
@@ -62,13 +66,15 @@ func InitWorkers() {
 			err := PaymentProcessor(payment, processorURLFallback)
 			if err != nil {
 				log.Printf("Error processing payment %s", err)
+				db.Client.LPush(db.RedisCtx, "payment_jobs", paymentJSON)
+				continue
 			}
+			updateSummaryCounters(payment, "fallback")
 			continue
 		}
 
 		log.Printf("ALERT: Both processors are failing %s.", payment.CorrelationId)
 
-		paymentJSON, err := json.Marshal(payment)
 		if err != nil {
 			log.Printf("Error serializing payment for requeueing")
 		}
@@ -76,4 +82,29 @@ func InitWorkers() {
 
 	} // infinite loop, waiting to pop from payments list
 
+}
+
+func updateSummaryCounters(p model.Payments, processorUsed string) error {
+	// 1. Converte o valor do pagamento para float64, que é o que IncrByFloat espera.
+	// Lembre-se que usamos a biblioteca decimal para precisão.
+	amountFloat, _ := p.Amount.Float64()
+
+	// 2. Define as chaves do Redis com base em qual processador foi usado.
+	requestsKey := fmt.Sprintf("summary:%s:requests", processorUsed) // ex: "summary:default:requests"
+	amountKey := fmt.Sprintf("summary:%s:amount", processorUsed)     // ex: "summary:default:amount"
+
+	// 3. Incrementa o contador de requisições
+	if err := db.Client.Incr(db.RedisCtx, requestsKey).Err(); err != nil {
+		log.Printf("Erro ao incrementar contador de requisições: %v", err)
+		return err
+	}
+
+	// 4. Incrementa o valor total
+	if err := db.Client.IncrByFloat(db.RedisCtx, amountKey, amountFloat).Err(); err != nil {
+		log.Printf("Erro ao incrementar valor total: %v", err)
+		return err
+	}
+
+	log.Printf("Contadores de resumo para o processador '%s' atualizados.", processorUsed)
+	return nil
 }

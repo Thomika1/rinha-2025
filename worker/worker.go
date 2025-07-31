@@ -17,7 +17,7 @@ func InitWorkers() {
 	processorURLFallback := os.Getenv("PROCESSOR_FALLBACK_URL")
 	processorURLDefault := os.Getenv("PROCESSOR_DEFAULT_URL")
 
-	conc := 20
+	conc := 25
 
 	for i := 0; i < conc; i++ {
 		fmt.Printf("\nworker %d initialized", i)
@@ -30,7 +30,7 @@ func InitWorkers() {
 					continue
 				}
 				taskData := result[1]
-				log.Printf("New task received: %s", taskData)
+				//log.Printf("New task received: %s", taskData)
 
 				var payment model.Payments
 				if err := sonic.Unmarshal([]byte(taskData), &payment); err != nil {
@@ -55,7 +55,7 @@ func InitWorkers() {
 					fallbackStatus.Failing = true
 				}
 
-				if defaultStatus.MinResponseTime > fallbackStatus.MinResponseTime+150 {
+				if defaultStatus.MinResponseTime > fallbackStatus.MinResponseTime+400 {
 					defaultStatus.Failing = true
 				}
 				///////////////////////
@@ -86,7 +86,7 @@ func InitWorkers() {
 
 				log.Printf("ALERT: Both processors are failing %s.", payment.CorrelationId)
 
-				db.Client.LPush(db.RedisCtx, "payment_jobs", paymentJSON)
+				db.Client.RPush(db.RedisCtx, "payment_jobs", paymentJSON)
 			} // infinite loop, waiting to pop from payments list
 		}()
 	}

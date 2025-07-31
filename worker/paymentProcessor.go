@@ -29,7 +29,7 @@ func PaymentProcessor(payment model.Payments, url string) error {
 	}
 
 	resp, err := httpClient.Post(url+"/payments", "application/json", bytes.NewReader(paymentJSON))
-	fmt.Println(paymentJSON)
+	//fmt.Println(paymentJSON)
 	//requestedAt := time.Now().UTC().Format(time.RFC3339Nano)
 	if err != nil {
 		return err

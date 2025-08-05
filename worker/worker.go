@@ -27,7 +27,7 @@ func InitWorkers() {
 				if err != nil {
 					// Se houver um erro aqui, é um problema sério (ex: conexão com Redis caiu),
 					// não apenas uma fila vazia.
-					log.Printf("WORKER ERRO ")
+					//log.Printf("WORKER ERRO ")
 					time.Sleep(1 * time.Second)
 					continue
 				}
@@ -42,12 +42,12 @@ func InitWorkers() {
 				//fmt.Printf("WORKER %s", payment)
 				err = PaymentProcessor(payment)
 				if err != nil {
-					log.Printf("Error processing payment %s", err)
+					//log.Printf("Error processing payment %s", err)
 
 					err := db.Client.LPush(db.RedisCtx, "payment_jobs", payment)
 
 					if err != nil {
-						log.Printf("WORKER Error queuing payment: %v", err)
+						//log.Printf("WORKER Error queuing payment: %v", err)
 					}
 				}
 				// time.Sleep(500 * time.Millisecond)

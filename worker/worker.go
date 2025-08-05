@@ -24,7 +24,6 @@ func InitWorkers() {
 		go func() {
 			for {
 				result, err := db.Client.BRPop(context.Background(), 0, "payment_jobs").Result()
-				fmt.Println(result)
 				if err != nil {
 					// Se houver um erro aqui, é um problema sério (ex: conexão com Redis caiu),
 					// não apenas uma fila vazia.

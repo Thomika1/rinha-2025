@@ -27,6 +27,6 @@ type ServiceHealth struct {
 type ProcessedPayment struct {
 	CorrelationID string          `json:"correlationId"`
 	Amount        decimal.Decimal `json:"amount"`
-	UrlProcessor  string          `json:"processor"`
-	CreatedAt     string          `json:"createdAt"`
+	ProcessedBy   string          `json:"processor"`
+	CreatedAt     string          `json:"requestedAt"`
 }

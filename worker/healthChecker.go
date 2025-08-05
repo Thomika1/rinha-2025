@@ -40,7 +40,7 @@ func StartHealthCheckerWithRedis(ctx context.Context, redisClient *redis.Client,
 			log.Printf("Error serializing health state to json: %v", err)
 			return
 		}
-
+		ctx = context.Background()
 		if err := redisClient.Set(ctx, redisKey, statusJSON, 0).Err(); err != nil {
 			log.Printf("Error seting health sate on redis %s: %v", redisKey, err)
 		}

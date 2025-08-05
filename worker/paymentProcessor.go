@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/bytedance/sonic"
 
+	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
 )
 
@@ -21,16 +23,39 @@ var httpClient = &http.Client{
 	Timeout: 10 * time.Second, // Timeout para a requisição inteira
 }
 
-func PaymentProcessor(payment model.Payments, url string) error {
+func PaymentProcessor(payment model.Payments) error {
 
-	paymentJSON, err := sonic.Marshal(payment)
+	statusDefault, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
 	if err != nil {
-		return fmt.Errorf("failed to marshal payment data: %w", err)
+		return fmt.Errorf("could not retrieve health state")
+	}
+	statusFallback, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
+	if err != nil {
+		return fmt.Errorf("could not retrieve health state")
 	}
 
-	resp, err := httpClient.Post(url+"/payments", "application/json", bytes.NewReader(paymentJSON))
-	//fmt.Println(paymentJSON)
-	//requestedAt := time.Now().UTC().Format(time.RFC3339Nano)
+	ProcessorURL := os.Getenv("PROCESSOR_DEFAULT_URL")
+	processedBy := "default"
+	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+400 {
+		ProcessorURL = os.Getenv("PROCESSOR_FALLBACK_URL")
+		processedBy = "fallback"
+	}
+	if statusFallback.Failing && statusDefault.Failing {
+		return fmt.Errorf("both processors failing ")
+	}
+
+	requestedAt := time.Now().UTC().Format(time.RFC3339Nano)
+
+	body := map[string]interface{}{
+		"correlationId": payment.CorrelationId,
+		"amount":        payment.Amount,
+		"requestedAt":   requestedAt,
+	}
+	bodyJSON, _ := sonic.Marshal(body)
+	//fmt.Println("PROCESSOR " + string(bodyJSON))
+
+	resp, err := httpClient.Post(ProcessorURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
+
 	if err != nil {
 		return err
 	} else {
@@ -40,6 +65,21 @@ func PaymentProcessor(payment model.Payments, url string) error {
 		}
 	}
 
-	return nil
+	processedPayment := model.ProcessedPayment{
+		CorrelationID: payment.CorrelationId,
+		Amount:        payment.Amount,
+		ProcessedBy:   processedBy,
+		CreatedAt:     requestedAt,
+	}
 
+	paymentData, err := sonic.Marshal(processedPayment)
+	if err != nil {
+		return fmt.Errorf("falha ao serializar dados do pagamento processado: %w", err)
+	}
+	err = db.Client.HSet(db.RedisCtx, "processed_payments", processedPayment.CorrelationID, paymentData).Err()
+	if err != nil {
+		return fmt.Errorf("falha ao guardar pagamento processado no Redis: %w", err)
+	}
+
+	return nil
 }

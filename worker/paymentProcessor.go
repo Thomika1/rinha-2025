@@ -3,9 +3,6 @@ package worker
 import (
 	"bytes"
 	"fmt"
-	"net"
-	"net/http"
-	"os"
 	"time"
 
 	"github.com/bytedance/sonic"
@@ -13,21 +10,6 @@ import (
 	"github.com/Thomika1/rinha-2025.git/db"
 	"github.com/Thomika1/rinha-2025.git/model"
 )
-
-var httpClient = &http.Client{
-	Transport: &http.Transport{
-		MaxIdleConns:        500, // Máximo de conexões ociosas
-		MaxConnsPerHost:     500, // Máximo de conexões por host
-		MaxIdleConnsPerHost: 100, // Máximo de conexões ociosas por host
-		DisableKeepAlives:   false,
-		IdleConnTimeout:     90 * time.Second,
-		DialContext: (&net.Dialer{
-			Timeout:   10 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-	},
-	Timeout: 10 * time.Second, // Timeout para a requisição inteira
-}
 
 func PaymentProcessor(payment model.Payments) error {
 
@@ -40,10 +22,10 @@ func PaymentProcessor(payment model.Payments) error {
 		return fmt.Errorf("could not retrieve health state")
 	}
 
-	ProcessorURL := os.Getenv("PROCESSOR_DEFAULT_URL")
+	ProcessorURL := model.DefaultURL
 	processedBy := "default"
-	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+300 {
-		ProcessorURL = os.Getenv("PROCESSOR_FALLBACK_URL")
+	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+200 {
+		ProcessorURL = model.FallbackURL
 		processedBy = "fallback"
 	}
 	if statusFallback.Failing && statusDefault.Failing {
@@ -60,7 +42,7 @@ func PaymentProcessor(payment model.Payments) error {
 	bodyJSON, _ := sonic.Marshal(body)
 	//fmt.Println("PROCESSOR " + string(bodyJSON))
 
-	resp, err := httpClient.Post(ProcessorURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
+	resp, err := model.HttpClient.Post(ProcessorURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
 
 	if err != nil {
 		return err

@@ -16,8 +16,6 @@ func InitWorkers() {
 	log.Print("initializing wokers...")
 
 	conc := 20
-	//api := os.Getenv("API_NAME")
-	//processingQueue := "payments_processing:" + api
 
 	for i := 0; i < conc; i++ {
 		fmt.Printf("\nworker %d initialized", i)
@@ -25,8 +23,6 @@ func InitWorkers() {
 			for {
 				result, err := db.Client.BRPop(context.Background(), 0, "payment_jobs").Result()
 				if err != nil {
-					// Se houver um erro aqui, é um problema sério (ex: conexão com Redis caiu),
-					// não apenas uma fila vazia.
 					//log.Printf("WORKER ERRO ")
 					time.Sleep(1 * time.Second)
 					continue

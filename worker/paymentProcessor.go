@@ -3,6 +3,7 @@ package worker
 import (
 	"bytes"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -15,10 +16,15 @@ import (
 
 var httpClient = &http.Client{
 	Transport: &http.Transport{
-		MaxIdleConns:        100, // Máximo de conexões ociosas
-		MaxConnsPerHost:     100, // Máximo de conexões por host
+		MaxIdleConns:        500, // Máximo de conexões ociosas
+		MaxConnsPerHost:     500, // Máximo de conexões por host
 		MaxIdleConnsPerHost: 100, // Máximo de conexões ociosas por host
+		DisableKeepAlives:   false,
 		IdleConnTimeout:     90 * time.Second,
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
 	},
 	Timeout: 10 * time.Second, // Timeout para a requisição inteira
 }
@@ -36,7 +42,7 @@ func PaymentProcessor(payment model.Payments) error {
 
 	ProcessorURL := os.Getenv("PROCESSOR_DEFAULT_URL")
 	processedBy := "default"
-	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+400 {
+	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+300 {
 		ProcessorURL = os.Getenv("PROCESSOR_FALLBACK_URL")
 		processedBy = "fallback"
 	}

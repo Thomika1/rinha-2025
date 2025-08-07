@@ -18,7 +18,7 @@ services:
           memory: "50MB"
 
   api1: &api
-    image: thomazmbonfim/rinha-de-backend-2025:latest
+    image: thomazmbonfim/rinha-de-backend-2025-keydb:latest
     hostname: api1
     environment:
       - REDIS_URL=6379
@@ -29,12 +29,12 @@ services:
       - backend
       - payment-processor
     depends_on:
-      redis:
+      keydb:
         condition: service_healthy
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: "0.4"
           memory: "75MB"
   api2: 
     <<: *api
@@ -47,24 +47,33 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
+          cpus: "0.4"
           memory: "75MB"
 
-  redis:
-    image: redis:7.2-alpine 
-    container_name: redis-rinha
-    command: redis-server --save "" --appendonly no --maxclients 20000
+  keydb:
+    image: eqalpha/keydb:x86_64_v6.3.4
+    container_name: keydb-rinha
+    # O comando abaixo é opcional, mas recomendado para tuning fino.
+    # '--server-threads 2' instrui o KeyDB a usar 2 threads para processar comandos,
+    # aproveitando seu potencial multithread. O ideal é que seja menor ou igual ao 
+    # número de CPUs disponíveis para o contêiner.
+    command: >
+      keydb-server /etc/keydb/keydb.conf 
+      --server-threads 2 
+      --maxclients 20000
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      # CORREÇÃO: Usa 'keydb-cli' em vez de 'redis-cli'.
+      test: ["CMD", "keydb-cli", "ping"]
       interval: 5s
       timeout: 5s
       retries: 5
     deploy:
       resources:
         limits:
-          cpus: "0.3"
+          # O KeyDB pode se beneficiar de um pouco mais de CPU por ser multithread.
+          cpus: "0.5" 
           memory: "150MB"
 networks:
     backend:

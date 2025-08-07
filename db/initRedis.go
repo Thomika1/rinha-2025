@@ -12,7 +12,7 @@ var RedisCtx = context.Background()
 
 func InitRedis() {
 	Client = redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     "keydb:6379",
 		Password: "", // No password set
 		DB:       0,  // Use default DB
 		Protocol: 2,  // Connection protocol

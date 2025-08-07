@@ -15,7 +15,7 @@ import (
 func InitWorkers() {
 	log.Print("initializing wokers...")
 
-	conc := 20
+	conc := 15
 
 	for i := 0; i < conc; i++ {
 		fmt.Printf("\nworker %d initialized", i)
@@ -40,7 +40,7 @@ func InitWorkers() {
 				if err != nil {
 					//log.Printf("Error processing payment %s", err)
 
-					err := db.Client.LPush(db.RedisCtx, "payment_jobs", payment)
+					err := db.Client.RPush(db.RedisCtx, "payment_jobs", payment)
 
 					if err != nil {
 						//log.Printf("WORKER Error queuing payment: %v", err)

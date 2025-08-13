@@ -38,7 +38,7 @@ func InitWorkers() {
 				//fmt.Printf("WORKER %s", payment)
 				err = PaymentProcessor(payment)
 				if err != nil {
-					//log.Printf("Error processing payment %s", err)
+					log.Printf("Error processing payment %s", err)
 
 					err := db.Client.RPush(db.RedisCtx, "payment_jobs", payment)
 

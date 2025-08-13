@@ -18,7 +18,7 @@ services:
           memory: "50MB"
 
   api1: &api
-    image: thomazmbonfim/rinha-de-backend-2025:latest
+    image: thomazmbonfim/rinha-de-backend-2025-2:latest
     hostname: api1
     environment:
       - REDIS_URL=6379

@@ -13,25 +13,24 @@ import (
 
 func PaymentProcessor(payment model.Payments) error {
 
-	statusDefault, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
-	if err != nil {
-		return fmt.Errorf("could not retrieve health state")
-	}
-	statusFallback, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
-	if err != nil {
-		return fmt.Errorf("could not retrieve health state")
-	}
+	// statusDefault, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
+	// if err != nil {
+	// 	return fmt.Errorf("could not retrieve health state")
+	// }
+	// statusFallback, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
+	// if err != nil {
+	// 	return fmt.Errorf("could not retrieve health state")
+	// }
 
-	ProcessorURL := model.DefaultURL
-	processedBy := "default"
-	if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+200 {
-		ProcessorURL = model.FallbackURL
-		processedBy = "fallback"
-	}
-	if statusFallback.Failing && statusDefault.Failing {
-		return fmt.Errorf("both processors failing ")
-	}
-
+	// ProcessorURL := model.DefaultURL
+	//processedBy := "default"
+	// if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+200 {
+	// 	ProcessorURL = model.FallbackURL
+	// 	processedBy = "fallback"
+	// }
+	// if statusFallback.Failing && statusDefault.Failing {
+	// 	return fmt.Errorf("both processors failing ")
+	// }
 	requestedAt := time.Now().UTC().Format(time.RFC3339Nano)
 
 	body := map[string]interface{}{
@@ -42,14 +41,27 @@ func PaymentProcessor(payment model.Payments) error {
 	bodyJSON, _ := sonic.Marshal(body)
 	//fmt.Println("PROCESSOR " + string(bodyJSON))
 
-	resp, err := model.HttpClient.Post(ProcessorURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
+	resp, err := model.HttpClient.Post(model.DefaultURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
+	processedBy := "default"
 
 	if err != nil {
 		return err
 	} else {
 		defer resp.Body.Close()
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-			return fmt.Errorf("failed to process payment: %s", resp.Status)
+			//return fmt.Errorf("failed to process payment: %s", resp.Status)
+			//fmt.Printf("\nDefault failed")
+			processedBy = "fallback"
+			resp, err = model.HttpClient.Post(model.FallbackURL+"/payments", "application/json", bytes.NewReader(bodyJSON))
+			if err != nil {
+				return err
+			} else {
+				defer resp.Body.Close()
+				if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+					//fmt.Printf("\nfallback failed")
+					return fmt.Errorf("failed to process payment, both processors failed: %s", resp.Status)
+				}
+			}
 		}
 	}
 

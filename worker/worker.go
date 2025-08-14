@@ -15,7 +15,7 @@ import (
 func InitWorkers() {
 	log.Print("initializing wokers...")
 
-	conc := 16
+	conc := 20
 
 	for i := 0; i < conc; i++ {
 		fmt.Printf("\nworker %d initialized", i)

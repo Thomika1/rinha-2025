@@ -107,7 +107,7 @@ func PaymentsSummary(ctx *fiber.Ctx) error {
 }
 
 func parseTime(ctx *fiber.Ctx) (from, to time.Time, filter bool, err error) {
-	fromParam := ctx.Query("from") // Retorna a string do 'from', ou "" se não existir.
+	fromParam := ctx.Query("from")
 	toParam := ctx.Query("to")
 
 	if fromParam == "" && toParam == "" {

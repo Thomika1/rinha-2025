@@ -42,11 +42,6 @@ type PaymentsSummaryResponse struct {
 	Fallback PaymentsSummary `json:"fallback"`
 }
 
-type ServiceHealth struct {
-	Failing         bool `json:"failing"`
-	MinResponseTime int  `json:"minResponseTime"`
-}
-
 type ProcessedPayment struct {
 	CorrelationID string          `json:"correlationId"`
 	Amount        decimal.Decimal `json:"amount"`

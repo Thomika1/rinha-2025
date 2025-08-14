@@ -13,24 +13,6 @@ import (
 
 func PaymentProcessor(payment model.Payments) error {
 
-	// statusDefault, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:default")
-	// if err != nil {
-	// 	return fmt.Errorf("could not retrieve health state")
-	// }
-	// statusFallback, err := getHealthFromRedis(db.RedisCtx, db.Client, "health:processor:fallback")
-	// if err != nil {
-	// 	return fmt.Errorf("could not retrieve health state")
-	// }
-
-	// ProcessorURL := model.DefaultURL
-	//processedBy := "default"
-	// if statusDefault.Failing || statusDefault.MinResponseTime > statusFallback.MinResponseTime+200 {
-	// 	ProcessorURL = model.FallbackURL
-	// 	processedBy = "fallback"
-	// }
-	// if statusFallback.Failing && statusDefault.Failing {
-	// 	return fmt.Errorf("both processors failing ")
-	// }
 	requestedAt := time.Now().UTC().Format(time.RFC3339Nano)
 
 	body := map[string]interface{}{

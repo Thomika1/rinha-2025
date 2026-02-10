@@ -1,5 +1,8 @@
 # Rinha de Backend 2025 - Minha Solução
 
+![diagrama](https://github.com/user-attachments/assets/c85eb4c1-b881-40f4-b073-2bfe71ba061d)
+
+
 Este repositório contém a minha submissão para a [Rinha de Backend 2025](https://github.com/zanfranceschi/rinha-de-backend-2025).
 
 A solução foi desenvolvida com foco em alta performance, resiliência e consistência, utilizando uma arquitetura assíncrona baseada em fila para garantir baixa latência (p99) no endpoint de recebimento de pagamentos.
